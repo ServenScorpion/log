@@ -24,3 +24,52 @@ neverallow check failed at out/target/product/beyondx/obj/ETC/plat_sepolicy.cil_
     <root>
     allow at out/target/product/beyondx/obj/ETC/vendor_sepolicy.cil_intermediates/vendor_sepolicy.cil:2074
       (allow hal_lineage_touch_default default_prop_32_0 (file (read)))
+
+
+
+#============= hal_lineage_touch_default ==============
+allow hal_lineage_touch_default default_prop:file read;
+
+
+# Properties which don't have entries on property_contexts
+system_internal_prop(default_prop)
+
+
+treble_sysprop_neverallow(`
+
+enforce_sysprop_owner(`
+  neverallow domain {
+    property_type
+    -system_property_type
+    -product_property_type
+    -vendor_property_type
+  }:file no_rw_file_perms;
+')
+
+neverallow { domain -coredomain } {
+  system_property_type
+  system_internal_property_type
+  -system_restricted_property_type
+  -system_public_property_type
+}:file no_rw_file_perms;
+
+neverallow { domain -coredomain } {
+  system_property_type
+  -system_public_property_type
+}:property_service set;
+
+# init is in coredomain, but should be able to read/write all props.
+# dumpstate is also in coredomain, but should be able to read all props.
+neverallow { coredomain -init -dumpstate } {
+  vendor_property_type
+  vendor_internal_property_type
+  -vendor_restricted_property_type
+  -vendor_public_property_type
+}:file no_rw_file_perms;
+
+neverallow { coredomain -init } {
+  vendor_property_type
+  -vendor_public_property_type
+}:property_service set;
+
+')
